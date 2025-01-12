@@ -1,36 +1,46 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
 import pool from '@/lib/db';
+import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const { email, password } = await req.json();
+    const { email, password } = await request.json();
 
     // Find user by email
-    const [users] = await pool.query(
-      'SELECT * FROM users WHERE email = ?',
+    const [users] = await pool.query<any[]>(
+      'SELECT * FROM user WHERE email = ?',
       [email]
     );
 
-    const user = (users as any[])[0];
-
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 400 });
+    if (users.length === 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const user = users[0];
 
-    if (!isPasswordValid) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 400 });
+    // Compare passwords
+    const match = await bcrypt.compare(password, user.password);
+
+    if (!match) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Here you would typically create a session or JWT token
-    // For simplicity, we're just returning a success message
-    return NextResponse.json({ message: 'Login successful' }, { status: 200 });
+    // Generate and store auth token
+    const token = uuidv4();
+    await pool.query(
+      'UPDATE user SET auth_token = ? WHERE id = ?',
+      [token, user.id]
+    );
+
+    // Login successful
+    return NextResponse.json({ 
+      message: 'Login successful',
+      token: token
+    }, { status: 200 });
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

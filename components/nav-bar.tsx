@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ChevronDown } from 'lucide-react'
+import { ArrowRight, ChevronDown, LogOut, ShoppingCart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const productCategories = [
@@ -18,6 +18,40 @@ const productCategories = [
 
 export function NavBar() {
   const [isHovered, setIsHovered] = useState(false)
+  const [user, setUser] = useState<{ username: string } | null>(null)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        try {
+          const response = await fetch('/api/auth/user', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data.user);
+          } else {
+            // If the token is invalid, clear it from localStorage
+            localStorage.removeItem('authToken');
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Error checking authentication:', error);
+          setUser(null);
+        }
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    setUser(null);
+  };
 
   return (
     <nav className="bg-gradient-to-r from-red-800 to-red-700 text-white p-4 shadow-lg">
@@ -78,12 +112,27 @@ export function NavBar() {
             </Link>
           </div>
         </div>
-        <button className="flex items-center gap-2 hover:text-gray-200 transition-colors">
-        <Link href="/login" className="hover:text-gray-200 transition-colors">
-              Connexion
+        {user ? (
+          <div className="flex items-center gap-4">
+            <Link href="/prix_articles" className="flex items-center gap-2 hover:text-gray-200 transition-colors">
+              <ShoppingCart className="h-4 w-4" />
+              Prix d'articles
             </Link>
-          <ArrowRight className="h-4 w-4" />
-        </button>
+            <span className="text-sm">{user.username}</span>
+            <button 
+              onClick={handleLogout} 
+              className="flex items-center gap-2 hover:text-gray-200 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Déconnexion
+            </button>
+          </div>
+        ) : (
+          <Link href="/login" className="flex items-center gap-2 hover:text-gray-200 transition-colors">
+            Connexion
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        )}
       </div>
     </nav>
   )

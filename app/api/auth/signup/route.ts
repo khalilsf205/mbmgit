@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
     // Check if user already exists
     const [existingUsers] = await pool.query(
-      'SELECT * FROM users WHERE email = ?',
+      'SELECT * FROM user WHERE email = ?',
       [email]
     );
 
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     // Insert new user
     await pool.query(
-      'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+      'INSERT INTO user (username, email, password) VALUES (?, ?, ?)',
       [username, email, hashedPassword]
     );
 

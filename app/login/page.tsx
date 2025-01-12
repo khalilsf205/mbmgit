@@ -31,6 +31,8 @@ export default function LoginPage() {
       })
 
       if (response.ok) {
+        const data = await response.json()
+        localStorage.setItem('authToken', data.token)
         router.push('/')
       } else {
         const data = await response.json()
@@ -38,8 +40,6 @@ export default function LoginPage() {
       }
     } catch (error) {
       setError('An error occurred during login')
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -174,7 +174,7 @@ export default function LoginPage() {
 
             <p className="text-center text-sm text-gray-500">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="font-medium text-red-600 hover:text-red-500">
+              <Link href="/sign_up" className="font-medium text-red-600 hover:text-red-500">
                 Sign up
               </Link>
             </p>
