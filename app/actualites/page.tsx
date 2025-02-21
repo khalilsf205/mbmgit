@@ -6,21 +6,21 @@ const newsArticles = [
   {
     id: 1,
     title: "Lancement de notre nouveau moteur pour rideau métallique",
-    date: "15 Juin 2023",
+    date: "15 Juin 2024",
     excerpt: "Découvrez notre dernière innovation en matière d'automatisation de rideaux métalliques.",
     image: "/liftfaster.jpg?height=200&width=300"
   },
   {
     id: 2,
-    title: "MBM participe au salon de l'industrie 2023",
-    date: "3 Mai 2023",
+    title: "MBM participe au salon de l'industrie 2024",
+    date: "3 Mai 2024",
     excerpt: "Retrouvez-nous au stand 42 pour découvrir nos dernières solutions en automatisation.",
     image: "/poste.jpg?height=200&width=300"
   },
   {
     id: 3,
     title: "Nouvelle gamme de serrures haute sécurité",
-    date: "20 Avril 2023",
+    date: "20 Avril 2024",
     excerpt: "MBM lance une gamme de serrures renforcées pour une sécurité optimale de vos locaux.",
     image: "/sen.jpg?height=200&width=300"
   }

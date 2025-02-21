@@ -1,46 +1,29 @@
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { cookies } from 'next/headers'
+import jwt from 'jsonwebtoken';
 
 export async function POST(req: Request) {
   console.log('Received order submission request');
   const { items } = await req.json()
   console.log('Order items:', items);
 
-  // Get the auth token from cookies
-  const cookieStore = await cookies()
-  const authToken = cookieStore.get('authToken')?.value
-  console.log('Auth token:', authToken); // Log the auth token
-
-  let username = 'Guest'
+  let username = 'Khalil Sfaxi';
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get('authToken')?.value;
 
   if (authToken) {
     try {
-      // Fetch user data from your authentication API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/user`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
-      });
-      console.log('Auth API response status:', response.status); // Log the response status
-
-      if (response.ok) {
-        const userData = await response.json();
-        console.log('User data:', userData); // Log the entire user data object
-        username = userData.user?.username || 'Guest';
-        console.log('Username:', username); // Log the extracted username
-      } else {
-        const errorData = await response.text();
-        console.error('Failed to fetch user data. Status:', response.status, 'Error:', errorData);
-      }
+      const decoded = jwt.verify(authToken, process.env.JWT_SECRET as string) as { userId: string, email: string, username: string };
+      username = decoded.username;
+      console.log('Authenticated user:', username);
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Error decoding auth token:', error);
     }
   } else {
     console.log('No auth token found in cookies');
   }
 
-  // Create a transporter using SMTP
   let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -49,10 +32,9 @@ export async function POST(req: Request) {
     },
   })
 
-  // Generate the email content
   const totalPrice = items.reduce((total: number, item: any) => {
     const itemPrice = typeof item.article.prix === 'number' ? item.article.prix : 0;
-    return total + itemPrice * item.quantity;
+    return total + item.article.prix*1.19 * item.quantity;
   }, 0);
 
   const emailContent = `
@@ -61,7 +43,7 @@ export async function POST(req: Request) {
     <ul>
       ${items.map((item: any) => `
         <li>
-          ${item.article.nom} - Quantité: ${item.quantity} - Prix: ${(Number(item.article.prix) * item.quantity).toFixed(2)} TND
+          ${item.article.name} - Quantité: ${item.quantity} - Prix: ${(Number(item.article.prix*1.19) * item.quantity).toFixed(2)} TND
         </li>
       `).join('')}
     </ul>
@@ -69,20 +51,19 @@ export async function POST(req: Request) {
   `
 
   try {
-    console.log('Attempting to send email');
-    // Send the email
+    console.log('Attempting to send email to:', process.env.EMAIL_USER);
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER, // Sending to the same email for now
+      to: process.env.EMAIL_USER,
       subject: 'Nouvelle commande',
       html: emailContent,
-    })
-    console.log('Email sent successfully');
+    });
 
-    return NextResponse.json({ message: 'Order submitted successfully', username }, { status: 200 })
+    console.log('Email sent successfully');
+    return NextResponse.json({ message: 'Order submitted successfully', username }, { status: 200 });
   } catch (error) {
-    console.error('Error sending email:', error)
-    return NextResponse.json({ error: 'Failed to submit order', details: error.message }, { status: 500 })
+    console.error('Error sending email:', error instanceof Error ? error.message : 'Unknown error');
+    return NextResponse.json({ error: 'Failed to submit order', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }
 

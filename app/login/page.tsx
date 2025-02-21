@@ -47,7 +47,6 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col">
       <NavBar />
       <main className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
-        {/* Decorative background */}
         <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-gray-50">
           <div className="absolute inset-0 bg-grid-black/[0.02] bg-[size:20px_20px]" />
         </div>
@@ -61,10 +60,10 @@ export default function LoginPage() {
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-8 space-y-6 border border-gray-200">
             <div className="space-y-2 text-center">
               <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-                Welcome back
+                Bienvenue
               </h2>
               <p className="text-sm text-gray-500">
-                Enter your credentials to access your account
+              Entrez vos identifiants pour accéder à votre compte
               </p>
             </div>
 
@@ -97,24 +96,12 @@ export default function LoginPage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                    Remember me
-                  </label>
-                </div>
-
                 <div className="text-sm">
                   <Link
                     href="/forgot-password"
                     className="font-medium text-red-600 hover:text-red-500"
                   >
-                    Forgot your password?
+                    Mot de passe oublié ?
                   </Link>
                 </div>
               </div>
@@ -141,11 +128,11 @@ export default function LoginPage() {
                     className="flex items-center space-x-2"
                   >
                     <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Signing in...</span>
+                    <span>Connexion...</span>
                   </motion.div>
                 ) : (
                   <span className="flex items-center justify-center">
-                    Sign in
+                    Se connecter
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </span>
                 )}
@@ -156,26 +143,11 @@ export default function LoginPage() {
               <div className="absolute inset-0 flex items-center">
                 <Separator />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Or continue with</span>
-              </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" className="w-full">
-                <Github className="mr-2 h-4 w-4" />
-                Github
-              </Button>
-              <Button variant="outline" className="w-full">
-                <Google className="mr-2 h-4 w-4" />
-                Google
-              </Button>
-            </div>
-
-            <p className="text-center text-sm text-gray-500">
-              Don&apos;t have an account?{' '}
+            <p className="text-center text-sm text-gray-500">               
+                Vous n'avez pas de compte ?{' '}
               <Link href="/sign_up" className="font-medium text-red-600 hover:text-red-500">
-                Sign up
+              S'inscrire
               </Link>
             </p>
           </div>

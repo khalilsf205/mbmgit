@@ -1,8 +1,7 @@
 export type Article = {
-    id: number;
-    nom: string;
-    prix: number;
-    disponibilite: boolean;
-  }
-  
-  
+  id: number;       
+  name: string;      
+  prix: number;      
+  inStock: boolean;  
+}
+

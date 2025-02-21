@@ -6,7 +6,6 @@ export async function POST(req: Request) {
   try {
     const { username, email, password } = await req.json();
 
-    // Check if user already exists
     const [existingUsers] = await pool.query(
       'SELECT * FROM user WHERE email = ?',
       [email]
@@ -16,10 +15,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User already exists' }, { status: 400 });
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert new user
     await pool.query(
       'INSERT INTO user (username, email, password) VALUES (?, ?, ?)',
       [username, email, hashedPassword]

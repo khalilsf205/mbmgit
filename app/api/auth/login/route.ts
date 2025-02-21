@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
-    // Find user by email
+    
     const [users] = await pool.query<any[]>(
       'SELECT * FROM user WHERE email = ?',
       [email]
@@ -19,21 +19,21 @@ export async function POST(request: Request) {
 
     const user = users[0];
 
-    // Compare passwords
+    
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Generate and store auth token
+    
     const token = uuidv4();
     await pool.query(
       'UPDATE user SET auth_token = ? WHERE id = ?',
       [token, user.id]
     );
 
-    // Login successful
+    
     return NextResponse.json({ 
       message: 'Login successful',
       token: token

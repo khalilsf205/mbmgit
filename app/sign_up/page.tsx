@@ -56,35 +56,15 @@ export default function SignupPage() {
         >
           <Card className="w-[350px]">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">Create an account</CardTitle>
+              <CardTitle className="text-2xl text-center">Créer un compte</CardTitle>
               <CardDescription className="text-center">
-                Enter your details to sign up
+              Entrez vos coordonnées pour vous inscrire
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
-              <div className="grid grid-cols-2 gap-6">
-                <Button variant="outline">
-                  <Icons.gitHub className="mr-2 h-4 w-4" />
-                  Github
-                </Button>
-                <Button variant="outline">
-                  <Icons.google className="mr-2 h-4 w-4" />
-                  Google
-                </Button>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
               <form onSubmit={handleSubmit}>
                 <div className="grid gap-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="username">Utilisateur</Label>
                   <Input
                     id="username"
                     type="text"
@@ -104,7 +84,7 @@ export default function SignupPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Mot de passe</Label>
                   <Input
                     id="password"
                     type="password"
@@ -119,25 +99,15 @@ export default function SignupPage() {
                   {isLoading && (
                     <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Sign up
+                  S'inscrire
                 </Button>
               </form>
             </CardContent>
             <CardFooter className="flex flex-col items-center">
               <p className="mt-2 text-xs text-center text-gray-700">
-                By signing up, you agree to our{' '}
-                <Link href="/terms" className="underline hover:text-red-500">
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link href="/privacy" className="underline hover:text-red-500">
-                  Privacy Policy
-                </Link>
-              </p>
-              <p className="mt-2 text-xs text-center text-gray-700">
-                Already have an account?{' '}
+              Vous avez déjà un compte ?{' '}
                 <Link href="/login" className="text-red-500 hover:underline">
-                  Sign in
+                Se connecter
                 </Link>
               </p>
             </CardFooter>

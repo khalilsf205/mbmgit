@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { ChevronLeft, Mail } from 'lucide-react'
 import Link from 'next/link'
 
-// Updated product structure with all categories
 const productCategories = {
   accessoire_rideau: [
     { id: 1, name: 'Lames', image: '/lamec.jpg', description: 'Lames pour rideau métallique' },

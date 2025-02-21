@@ -5,10 +5,10 @@ import { CartProvider } from '@/contexts/cart_context'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { getArticles } from '@/lib/articles'
 import { ErrorBoundary } from '@/components/error-boundary'
-import { Article } from '@/types/article'  // Import the Article type
+import { Article } from '@/types/article'  
 
 export default async function PrixArticles() {
-  let articles: Article[] = [];  // Explicitly type articles as Article[]
+  let articles: Article[] = [];  
   let error: Error | null = null;
 
   try {

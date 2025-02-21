@@ -8,5 +8,14 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
+pool.getConnection()
+  .then((connection) => {
+    console.log('Database connected successfully');
+    connection.release();
+  })
+  .catch((err) => {
+    console.error('Error connecting to the database:', err);
+  });
+
 export default pool;
 

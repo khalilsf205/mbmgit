@@ -3,15 +3,15 @@ import Image from 'next/image'
 export function ProductsSection() {
   const products = [
     {
-      name: "Poste",
+      name: "Poste Sodure",
       image: "/poste.jpg?height=200&width=300",
     },
     {
-      name: "Beninca",
+      name: "Moteur porte collisant",
       image: "/beninca.jpg?height=200&width=300",
     },
     {
-      name: "zing",
+      name: "Toles larmée",
       image: "/zing.jpg?height=200&width=300",
     }
   ]

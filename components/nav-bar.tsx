@@ -34,7 +34,6 @@ export function NavBar() {
             const data = await response.json();
             setUser(data.user);
           } else {
-            // If the token is invalid, clear it from localStorage
             localStorage.removeItem('authToken');
             setUser(null);
           }
