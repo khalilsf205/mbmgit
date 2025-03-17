@@ -1,46 +1,73 @@
-import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
-import bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+import pool from "@/lib/db"
+import bcrypt from "bcrypt"
+import { encrypt } from "@/lib/crypto"
+import { cookies } from "next/headers"
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json()
+    const { email, password } = body
 
-    
-    const [users] = await pool.query<any[]>(
-      'SELECT * FROM user WHERE email = ?',
-      [email]
-    );
+    // Log the login attempt
+    console.log("API login attempt for:", email)
 
-    if (users.length === 0) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    // Find user by email
+    const [users] = await pool.query("SELECT id, username, email, password, role FROM user WHERE email = ?", [email])
+
+    const userArray = users as any[]
+    if (userArray.length === 0) {
+      console.log("No user found with email:", email)
+      return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 })
     }
 
-    const user = users[0];
+    const user = userArray[0]
+    console.log("Found user:", { id: user.id, email: user.email, role: user.role })
 
-    
-    const match = await bcrypt.compare(password, user.password);
+    // Verify password
+    const passwordMatch = await bcrypt.compare(password, user.password)
+    console.log("Password match:", passwordMatch)
 
-    if (!match) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    if (!passwordMatch) {
+      return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 })
     }
 
-    
-    const token = uuidv4();
-    await pool.query(
-      'UPDATE user SET auth_token = ? WHERE id = ?',
-      [token, user.id]
-    );
+    // Create session
+    const session = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    }
 
-    
-    return NextResponse.json({ 
-      message: 'Login successful',
-      token: token
-    }, { status: 200 });
+    // Encrypt session and store in cookie
+    const encryptedSession = await encrypt(JSON.stringify(session))
+    const cookieStore = await cookies()
+
+    cookieStore.set("session", encryptedSession, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: "/",
+    })
+
+    console.log("Login successful, session created for user:", user.email)
+
+    // Return success response with user data
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+    })
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("API login error:", error)
+    return NextResponse.json({ success: false, error: "An error occurred during login" }, { status: 500 })
   }
 }
 

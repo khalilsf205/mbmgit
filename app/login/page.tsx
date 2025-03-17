@@ -1,159 +1,165 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Mail, Lock, ArrowRight, Github, ChromeIcon as Google } from 'lucide-react'
-import { NavBar } from '@/components/nav-bar'
-import { Footer } from '@/components/footer'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { Button } from "@/components/ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "@/components/ui/use-toast"
+
+const formSchema = z.object({
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  password: z.string().min(1, {
+    message: "Password is required.",
+  }),
+})
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
+    setDebugInfo(null)
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      // Log the values being submitted (for debugging)
+      console.log("Submitting login with:", values)
+
+      // Use the API endpoint instead of the server action
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        localStorage.setItem('authToken', data.token)
-        router.push('/')
+      const result = await response.json()
+      console.log("Login result:", result)
+
+      if (result.success && result.user) {
+        // Show success message
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${result.user.username}! Role: ${result.user.role}`,
+        })
+
+        // Set debug info
+        setDebugInfo(`Login successful. User: ${result.user.username}, Role: ${result.user.role}`)
+
+        // Redirect based on role
+        if (result.user.role === "admin") {
+          console.log("Redirecting to admin dashboard...")
+          // Use replace instead of push for a cleaner navigation experience
+          router.replace("/admin")
+        } else if (result.user.role === "client") {
+          router.replace("/client")
+        } else if (result.user.role === "employer") {
+          router.replace("/employer")
+        } else {
+          // Default fallback
+          router.replace("/dashboard")
+        }
+
+        // Force a refresh to update the UI based on the new auth state
+        router.refresh()
       } else {
-        const data = await response.json()
-        setError(data.error || 'An error occurred during login')
+        // Show error message
+        toast({
+          title: "Login failed",
+          description: result.error || "Invalid email or password",
+          variant: "destructive",
+        })
+
+        // Set debug info
+        setDebugInfo(`Login failed: ${result.error || "Unknown error"}`)
       }
     } catch (error) {
-      setError('An error occurred during login')
+      console.error("Login error:", error)
+
+      // Show error message
+      toast({
+        title: "Login failed",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      })
+
+      // Set debug info
+      setDebugInfo(`Error during login: ${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <NavBar />
-      <main className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-gray-50">
-          <div className="absolute inset-0 bg-grid-black/[0.02] bg-[size:20px_20px]" />
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="relative w-full max-w-md"
-        >
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl p-8 space-y-6 border border-gray-200">
-            <div className="space-y-2 text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-                Bienvenue
-              </h2>
-              <p className="text-sm text-gray-500">
-              Entrez vos identifiants pour accéder à votre compte
-              </p>
-            </div>
-
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Email address"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Password"
-                    className="pl-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="text-sm">
-                  <Link
-                    href="/forgot-password"
-                    className="font-medium text-red-600 hover:text-red-500"
-                  >
-                    Mot de passe oublié ?
-                  </Link>
-                </div>
-              </div>
-
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-500 bg-red-50 p-3 rounded-md"
-                >
-                  {error}
-                </motion.div>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full bg-red-600 hover:bg-red-700"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center space-x-2"
-                  >
-                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Connexion...</span>
-                  </motion.div>
-                ) : (
-                  <span className="flex items-center justify-center">
-                    Se connecter
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </span>
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">Login</CardTitle>
+          <CardDescription>Enter your credentials to access your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="your.email@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Logging in..." : "Login"}
               </Button>
-            </form>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator />
-              </div>
-            </div>
-            <p className="text-center text-sm text-gray-500">               
-                Vous n'avez pas de compte ?{' '}
-              <Link href="/sign_up" className="font-medium text-red-600 hover:text-red-500">
-              S'inscrire
-              </Link>
-            </p>
-          </div>
-        </motion.div>
-      </main>
-      <Footer />
+              {/* Debug information - remove in production */}
+              {debugInfo && (
+                <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                  <p className="font-mono">{debugInfo}</p>
+                </div>
+              )}
+            </form>
+          </Form>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-muted-foreground">Don&apos;t have an account? Contact your administrator.</p>
+        </CardFooter>
+      </Card>
     </div>
   )
 }
