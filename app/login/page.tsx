@@ -72,10 +72,8 @@ export default function LoginPage() {
           router.replace("/client")
         } else if (result.user.role === "employer") {
           router.replace("/employer")
-        } else {
-          // Default fallback
-          router.replace("/dashboard")
         }
+        
 
         // Force a refresh to update the UI based on the new auth state
         router.refresh()

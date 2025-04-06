@@ -46,7 +46,7 @@ export async function loginUser({ email, password }: { email: string; password: 
 
     // Encrypt session and store in cookie
     const encryptedSession = await encrypt(JSON.stringify(session))
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
 
     cookieStore.set("session", encryptedSession, {
       httpOnly: true,
@@ -74,7 +74,7 @@ export async function loginUser({ email, password }: { email: string; password: 
 
 export async function logoutUser() {
   // Get the cookies object
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
 
   // Now delete the cookie
   cookieStore.delete("session")
@@ -84,13 +84,14 @@ export async function logoutUser() {
 
 export async function getCurrentUser() {
   try {
-    // Get the cookies object
-    const cookieStore = cookies()
+    // Get the cookies object - this must be awaited
+    const cookieStore = await cookies()
 
-    // Now get the session cookie
+    // Get the session cookie
     const sessionCookie = cookieStore.get("session")
 
     if (!sessionCookie) {
+      console.log("No session cookie found")
       return null
     }
 
@@ -101,9 +102,12 @@ export async function getCurrentUser() {
       // Check if session is expired
       if (session.expires < Date.now()) {
         // Delete the expired cookie
+        console.log("Session expired, clearing cookie")
         cookieStore.delete("session")
         return null
       }
+
+      console.log("Session found for user:", session.email, "with role:", session.role)
 
       return {
         id: session.id,

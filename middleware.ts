@@ -6,7 +6,12 @@ export async function middleware(request: NextRequest) {
   const session = request.cookies.get("session")?.value
 
   // If accessing protected routes without a session, redirect to login
-  if (request.nextUrl.pathname.startsWith("/admin") && !session) {
+  if (
+    (request.nextUrl.pathname.startsWith("/admin") ||
+      request.nextUrl.pathname.startsWith("/client") ||
+      request.nextUrl.pathname.startsWith("/employer")) &&
+    !session
+  ) {
     console.log("Middleware: No session found, redirecting to login")
     return NextResponse.redirect(new URL("/login", request.url))
   }
@@ -24,7 +29,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/admin", request.url))
       } else if (userData.role === "client") {
         return NextResponse.redirect(new URL("/client", request.url))
-      } else if (userData.role === "employer") {
+      } else if (userData.role === "Employer") {
         return NextResponse.redirect(new URL("/employer", request.url))
       }
     } catch (error) {
@@ -48,7 +53,7 @@ export async function middleware(request: NextRequest) {
         // Redirect to appropriate dashboard based on role
         if (userData.role === "client") {
           return NextResponse.redirect(new URL("/client", request.url))
-        } else if (userData.role === "employer") {
+        } else if (userData.role === "Employer") {
           return NextResponse.redirect(new URL("/employer", request.url))
         }
 
@@ -64,11 +69,67 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Check if user is trying to access client routes but is not a client
+  if (request.nextUrl.pathname.startsWith("/client") && session) {
+    try {
+      const decrypted = await decrypt(session)
+      const userData = JSON.parse(decrypted)
+
+      if (userData.role !== "client") {
+        console.log("Middleware: Non-client user trying to access client routes, redirecting")
+
+        // Redirect to appropriate dashboard based on role
+        if (userData.role === "admin") {
+          return NextResponse.redirect(new URL("/admin", request.url))
+        } else if (userData.role === "Employer") {
+          return NextResponse.redirect(new URL("/employer", request.url))
+        }
+
+        // Fallback to login if role is unknown
+        return NextResponse.redirect(new URL("/login", request.url))
+      }
+    } catch (error) {
+      console.error("Middleware: Error checking client access:", error)
+      // If there's an error, clear the cookie and redirect to login
+      const response = NextResponse.redirect(new URL("/login", request.url))
+      response.cookies.delete("session")
+      return response
+    }
+  }
+
+  // Check if user is trying to access employer routes but is not an employer
+  if (request.nextUrl.pathname.startsWith("/employer") && session) {
+    try {
+      const decrypted = await decrypt(session)
+      const userData = JSON.parse(decrypted)
+
+      if (userData.role !== "Employer") {
+        console.log("Middleware: Non-employer user trying to access employer routes, redirecting")
+
+        // Redirect to appropriate dashboard based on role
+        if (userData.role === "admin") {
+          return NextResponse.redirect(new URL("/admin", request.url))
+        } else if (userData.role === "client") {
+          return NextResponse.redirect(new URL("/client", request.url))
+        }
+
+        // Fallback to login if role is unknown
+        return NextResponse.redirect(new URL("/login", request.url))
+      }
+    } catch (error) {
+      console.error("Middleware: Error checking employer access:", error)
+      // If there's an error, clear the cookie and redirect to login
+      const response = NextResponse.redirect(new URL("/login", request.url))
+      response.cookies.delete("session")
+      return response
+    }
+  }
+
   // Allow all other requests to proceed
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/login", "/client/:path*", "/employer/:path*"],
+  matcher: ["/admin/:path*", "/client/:path*", "/employer/:path*", "/login"],
 }
 
